@@ -1,0 +1,45 @@
+<%- include('../partials/header', { titrePage: 'Utilisateurs' }) %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3 class="mb-0">Utilisateurs</h3>
+  <a href="/utilisateurs/nouveau" class="btn btn-dark">+ Ajouter un utilisateur</a>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Email</th>
+          <th>Rôle</th>
+          <th>Statut</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% utilisateurs.forEach(u => { %>
+        <tr>
+          <td><%= u.nom %></td>
+          <td><%= u.email %></td>
+          <td><%= u.role === 'admin' ? 'Administrateur' : 'Employé' %></td>
+          <td><span class="badge <%= u.actif ? 'bg-success' : 'bg-secondary' %>"><%= u.actif ? 'Actif' : 'Désactivé' %></span></td>
+          <td class="text-end">
+            <% if (u.actif) { %>
+              <form action="/utilisateurs/<%= u.id %>/desactiver" method="POST" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Désactiver</button>
+              </form>
+            <% } else { %>
+              <form action="/utilisateurs/<%= u.id %>/activer" method="POST" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-outline-success">Activer</button>
+              </form>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

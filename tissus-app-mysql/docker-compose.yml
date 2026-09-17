@@ -1,0 +1,47 @@
+# Lance l'application ET une base MySQL ensemble.
+# Utilisation :
+#   1. cp .env.example .env   (puis éditez .env si besoin — DB_HOST doit rester "mysql" ci-dessous)
+#   2. docker compose up -d --build
+#   3. Ouvrez http://localhost:3000
+#
+# Les données MySQL sont conservées dans le volume "mysql_data" entre les redémarrages.
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-gestion_tissus}
+      MYSQL_USER: ${DB_USER:-gestion_tissus}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-changez-ce-mot-de-passe}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-changez-aussi-ce-mot-de-passe-root}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      SESSION_SECRET: ${SESSION_SECRET:-changez-cette-cle-secrete-en-production}
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ${DB_USER:-gestion_tissus}
+      DB_PASSWORD: ${DB_PASSWORD:-changez-ce-mot-de-passe}
+      DB_NAME: ${DB_NAME:-gestion_tissus}
+      ADMIN_NOM: ${ADMIN_NOM:-Administrateur}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin1234}
+    ports:
+      - "3000:3000"
+
+volumes:
+  mysql_data:
