@@ -32,4 +32,4 @@ jobs:
             --exclude='.env' \
             -e "ssh -i ~/.ssh/deploy_key" \
             ./ \
-            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/tissus-app/tissus-app-mysql/"
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/tissus-app/"
