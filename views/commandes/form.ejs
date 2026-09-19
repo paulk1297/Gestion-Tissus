@@ -23,6 +23,12 @@
     <div class="card">
       <div class="card-body p-4">
         <% if (erreur) { %><div class="alert alert-danger py-2"><%= erreur %></div><% } %>
+        <% if (item && item.id && item.quantite_recue > 0) { %>
+          <div class="alert alert-info py-2">
+            Déjà reçu sur cette commande : <strong><%= item.quantite_recue %></strong> / <%= item.quantite %>.
+            La quantité commandée ne peut pas être réduite en dessous de la quantité déjà reçue.
+          </div>
+        <% } %>
         <% if (couturiers.length === 0) { %>
           <div class="alert alert-warning">Aucun couturier enregistré. <a href="/couturiers/nouveau">Ajoutez d'abord un couturier</a>.</div>
         <% } %>
@@ -71,7 +77,8 @@
             </div>
             <div class="col-md-4 mb-3">
               <label class="form-label">Quantité *</label>
-              <input type="number" step="0.01" min="0" name="quantite" class="form-control" value="<%= item && item.quantite ? item.quantite : '' %>" required>
+              <input type="number" step="0.01" min="0" name="quantite" id="champ-quantite" class="form-control" value="<%= item && item.quantite ? item.quantite : '' %>" required>
+              <div class="form-text" id="info-stock-max"></div>
             </div>
             <div class="col-md-4 mb-3">
               <label class="form-label">Montant déjà payé</label>
@@ -82,7 +89,7 @@
             <label class="form-label">Notes</label>
             <textarea name="notes" class="form-control" rows="2"><%= item && item.notes ? item.notes : '' %></textarea>
           </div>
-          <button type="submit" class="btn btn-dark">Enregistrer</button>
+          <button type="submit" class="btn btn-brand">Enregistrer</button>
           <a href="/commandes" class="btn btn-link">Annuler</a>
         </form>
       </div>
@@ -101,6 +108,17 @@
 
     var selectQualite = document.getElementById('champ-qualite');
     var selectNomTissu = document.getElementById('champ-nom-tissu');
+    var champQuantite = document.getElementById('champ-quantite');
+    var infoStockMax = document.getElementById('info-stock-max');
+
+    // En modification, la commande en cours a déjà été déduite du stock non
+    // cousu (dès lors que son statut n'est pas "annulée") : si on ne change
+    // pas l'article, il faut donc réajouter sa propre quantité pour savoir
+    // combien il reste réellement « à côté ».
+    var commandeActuelleQualite = <%- JSON.stringify(item && item.id ? item.qualite : '') %>;
+    var commandeActuelleNomTissu = <%- JSON.stringify(item && item.id ? (item.nom_tissu || '') : '') %>;
+    var commandeActuelleQuantite = <%- JSON.stringify(item && item.id && item.quantite ? parseFloat(item.quantite) : 0) %>;
+    var commandeActuelleStatut = <%- JSON.stringify(item && item.id ? item.statut : '') %>;
 
     var qualites = [];
     stockTissus.forEach(function (s) {
@@ -142,9 +160,50 @@
 
     remplirNomTissu(qualiteActuelle, nomTissuActuel);
 
+    // Contrôle du stock disponible : empêche la validation du formulaire si
+    // la quantité saisie dépasse le stock non cousu réellement disponible
+    // pour la combinaison qualité/nom du tissu choisie. Si le nom du tissu
+    // n'est pas précisé, la commande n'impacte pas le calcul détaillé du
+    // stock (comme documenté) : aucun contrôle n'est donc appliqué.
+    function stockDisponiblePour(qualite, nomTissu) {
+      var trouve = stockTissus.filter(function (s) { return s.qualite === qualite && s.nom_tissu === nomTissu; })[0];
+      var disponible = trouve ? trouve.stock : 0;
+      if (
+        commandeActuelleStatut !== 'annule' &&
+        qualite === commandeActuelleQualite &&
+        nomTissu === commandeActuelleNomTissu
+      ) {
+        disponible += commandeActuelleQuantite;
+      }
+      return disponible;
+    }
+
+    function verifierStock() {
+      var qualite = selectQualite.value;
+      var nomTissu = selectNomTissu.value;
+      if (!qualite || !nomTissu) {
+        infoStockMax.textContent = '';
+        champQuantite.setCustomValidity('');
+        return;
+      }
+      var disponible = stockDisponiblePour(qualite, nomTissu);
+      infoStockMax.textContent = 'Stock non cousu disponible pour cet article : ' + disponible;
+      var quantiteSaisie = parseFloat(champQuantite.value);
+      if (!isNaN(quantiteSaisie) && quantiteSaisie > disponible) {
+        champQuantite.setCustomValidity('La quantité dépasse le stock non cousu disponible (' + disponible + ').');
+      } else {
+        champQuantite.setCustomValidity('');
+      }
+    }
+
     selectQualite.addEventListener('change', function () {
       remplirNomTissu(selectQualite.value, '');
+      verifierStock();
     });
+    selectNomTissu.addEventListener('change', verifierStock);
+    champQuantite.addEventListener('input', verifierStock);
+
+    verifierStock();
   })();
 </script>
 

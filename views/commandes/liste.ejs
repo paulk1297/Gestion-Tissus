@@ -2,7 +2,7 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h3 class="mb-0">Commandes de couture</h3>
-  <a href="/commandes/nouveau" class="btn btn-dark">+ Nouvelle commande</a>
+  <a href="/commandes/nouveau" class="btn btn-brand">+ Nouvelle commande</a>
 </div>
 
 <div class="mb-3">
@@ -25,6 +25,7 @@
           <th>Modèle</th>
           <th class="text-end">Prix unit. couture</th>
           <th class="text-end">Quantité</th>
+          <th class="text-end">Reçu</th>
           <th class="text-end">Total</th>
           <th class="text-end">Solde dû</th>
           <th>Statut</th>
@@ -33,9 +34,14 @@
       </thead>
       <tbody>
         <% if (lignes.length === 0) { %>
-          <tr><td colspan="10" class="text-center text-muted py-4">Aucune commande enregistrée.</td></tr>
+          <tr><td colspan="11" class="text-center text-muted py-4">Aucune commande enregistrée.</td></tr>
         <% } %>
-        <% lignes.forEach(item => { const solde = (item.montant_total - item.montant_paye); %>
+        <% lignes.forEach(item => {
+          const solde = (item.montant_total - item.montant_paye);
+          const reste = Math.round((item.quantite - item.quantite_recue) * 1000) / 1000;
+          const statutAffiche = (item.statut === 'envoye' && item.quantite_recue > 0) ? 'partiel' : item.statut;
+          const libellesStatut = { envoye: 'envoyée', recu: 'reçue', annule: 'annulée', partiel: 'partiellement reçue' };
+        %>
         <tr>
           <td><%= item.date_envoi %></td>
           <td><%= item.couturier_nom %></td>
@@ -43,13 +49,16 @@
           <td><%= item.modele %></td>
           <td class="text-end"><%= item.prix_unitaire_couture.toLocaleString('fr-FR') %></td>
           <td class="text-end"><%= item.quantite %></td>
+          <td class="text-end"><%= item.quantite_recue > 0 ? item.quantite_recue : '—' %></td>
           <td class="text-end"><%= item.montant_total.toLocaleString('fr-FR') %></td>
           <td class="text-end <%= solde > 0 ? 'solde-positif' : '' %>"><%= solde.toLocaleString('fr-FR') %></td>
-          <td><span class="badge badge-statut-<%= item.statut %>"><%= item.statut %></span></td>
+          <td><span class="badge badge-statut-<%= statutAffiche %>"><%= libellesStatut[statutAffiche] || statutAffiche %></span></td>
           <td class="text-end text-nowrap">
             <% if (item.statut === 'envoye') { %>
-              <form action="/commandes/<%= item.id %>/recevoir" method="POST" class="d-inline">
-                <button type="submit" class="btn btn-sm btn-outline-success">Marquer reçue</button>
+              <form action="/commandes/<%= item.id %>/recevoir" method="POST" class="d-flex align-items-center justify-content-end gap-1 mb-1">
+                <input type="number" step="0.01" min="0.01" max="<%= reste %>" name="quantite_recue" value="<%= reste %>"
+                  class="form-control form-control-sm" style="width: 85px;" title="Quantité reçue (reste <%= reste %>)" required>
+                <button type="submit" class="btn btn-sm btn-outline-success">Réceptionner</button>
               </form>
             <% } %>
             <a href="/commandes/<%= item.id %>/modifier" class="btn btn-sm btn-outline-secondary">Modifier</a>

@@ -1,14 +1,111 @@
+/*
+ * Système de thèmes : 2 styles de couleur ("Naturel" et "Indigo"), chacun
+ * disponible en clair et en sombre. Le style est posé sur <html data-style>
+ * et le mode clair/sombre sur <html data-bs-theme> (attribut natif de
+ * Bootstrap 5.3, qui rend déjà la plupart des composants — cartes, tableaux,
+ * alertes, menus — automatiquement adaptés). Les variables ci-dessous
+ * couvrent le reste (couleur de marque, badges de statut, fond de page...).
+ * Choix mémorisé côté navigateur par views/partials/footer.ejs.
+ */
+
+:root,
+[data-style="1"] {
+  --accent: #8c4a2f;
+  --accent-hover: #6f3a24;
+  --accent-active: #5c2f1e;
+  --accent-contrast: #ffffff;
+  --body-bg: #f6f5f3;
+  --card-bg: #ffffff;
+  --card-shadow: rgba(0, 0, 0, 0.08);
+  --text-muted: #6c757d;
+  --badge-envoye-bg: #fff3cd;
+  --badge-envoye-text: #664d03;
+  --badge-recu-bg: #d1e7dd;
+  --badge-recu-text: #0f5132;
+  --badge-partiel-bg: #cfe2ff;
+  --badge-partiel-text: #084298;
+  --badge-annule-bg: #f8d7da;
+  --badge-annule-text: #842029;
+  --danger-text: #b02a37;
+}
+
+[data-style="1"][data-bs-theme="dark"] {
+  --accent: #b5623f;
+  --accent-hover: #c8734d;
+  --accent-active: #9c4f30;
+  --body-bg: #1f1a17;
+  --card-bg: #2a231f;
+  --card-shadow: rgba(0, 0, 0, 0.45);
+  --text-muted: #b7ada5;
+  --badge-envoye-bg: #4d3b13;
+  --badge-envoye-text: #ffe08a;
+  --badge-recu-bg: #163d2c;
+  --badge-recu-text: #86e3b6;
+  --badge-partiel-bg: #1c2d4d;
+  --badge-partiel-text: #9ec1ff;
+  --badge-annule-bg: #4a1e22;
+  --badge-annule-text: #f5a3ab;
+  --danger-text: #ff8a94;
+}
+
+[data-style="2"] {
+  --accent: #3949ab;
+  --accent-hover: #2f3d94;
+  --accent-active: #26317a;
+  --accent-contrast: #ffffff;
+  --body-bg: #f4f6fb;
+  --card-bg: #ffffff;
+  --card-shadow: rgba(0, 0, 0, 0.08);
+  --text-muted: #656d82;
+  --badge-envoye-bg: #fff3cd;
+  --badge-envoye-text: #664d03;
+  --badge-recu-bg: #d1e7dd;
+  --badge-recu-text: #0f5132;
+  --badge-partiel-bg: #dbe4ff;
+  --badge-partiel-text: #2f3d94;
+  --badge-annule-bg: #f8d7da;
+  --badge-annule-text: #842029;
+  --danger-text: #b02a37;
+}
+
+[data-style="2"][data-bs-theme="dark"] {
+  --accent: #5b6fd8;
+  --accent-hover: #7688e0;
+  --accent-active: #4a5cc0;
+  --body-bg: #14161f;
+  --card-bg: #1c1f2b;
+  --card-shadow: rgba(0, 0, 0, 0.45);
+  --text-muted: #a4aac2;
+  --badge-envoye-bg: #4d3b13;
+  --badge-envoye-text: #ffe08a;
+  --badge-recu-bg: #163d2c;
+  --badge-recu-text: #86e3b6;
+  --badge-partiel-bg: #232a52;
+  --badge-partiel-text: #aab7ff;
+  --badge-annule-bg: #4a1e22;
+  --badge-annule-text: #f5a3ab;
+  --danger-text: #ff8a94;
+}
+
 body {
-  background-color: #f6f5f3;
+  background-color: var(--body-bg);
 }
 
 .navbar-brand {
   font-weight: 600;
 }
 
+/* Barre de navigation teintée avec la couleur d'accent du style choisi,
+   dans les deux modes (elle reste une bande de couleur, comme le reste de
+   l'application bascule entre clair et sombre autour d'elle). */
+.app-navbar {
+  background-color: var(--accent) !important;
+}
+
 .card {
+  background-color: var(--card-bg);
   border: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 3px var(--card-shadow);
 }
 
 .stat-card .stat-value {
@@ -20,35 +117,65 @@ body {
   white-space: nowrap;
   font-size: 0.85rem;
   text-transform: uppercase;
-  color: #6c757d;
+  color: var(--text-muted);
+}
+
+/* Bouton principal de l'application (remplace btn-dark) : reprend l'accent
+   du style choisi via l'API de variables des boutons Bootstrap 5.3. */
+.btn-brand {
+  --bs-btn-color: var(--accent-contrast);
+  --bs-btn-bg: var(--accent);
+  --bs-btn-border-color: var(--accent);
+  --bs-btn-hover-color: var(--accent-contrast);
+  --bs-btn-hover-bg: var(--accent-hover);
+  --bs-btn-hover-border-color: var(--accent-hover);
+  --bs-btn-focus-shadow-rgb: 140, 74, 47;
+  --bs-btn-active-color: var(--accent-contrast);
+  --bs-btn-active-bg: var(--accent-active);
+  --bs-btn-active-border-color: var(--accent-active);
+  --bs-btn-disabled-color: var(--accent-contrast);
+  --bs-btn-disabled-bg: var(--accent);
+  --bs-btn-disabled-border-color: var(--accent);
 }
 
 .badge-statut-envoye {
-  background-color: #fff3cd;
-  color: #664d03;
+  background-color: var(--badge-envoye-bg);
+  color: var(--badge-envoye-text);
 }
 
 .badge-statut-recu {
-  background-color: #d1e7dd;
-  color: #0f5132;
+  background-color: var(--badge-recu-bg);
+  color: var(--badge-recu-text);
+}
+
+.badge-statut-partiel {
+  background-color: var(--badge-partiel-bg);
+  color: var(--badge-partiel-text);
 }
 
 .badge-statut-annule {
-  background-color: #f8d7da;
-  color: #842029;
+  background-color: var(--badge-annule-bg);
+  color: var(--badge-annule-text);
 }
 
 .solde-positif {
-  color: #b02a37;
+  color: var(--danger-text);
   font-weight: 600;
 }
 
 .stock-faible {
-  color: #b02a37;
+  color: var(--danger-text);
   font-weight: 600;
 }
 
 footer {
-  color: #6c757d;
+  color: var(--text-muted);
   font-size: 0.85rem;
+}
+
+/* Menu "Apparence" de la barre de navigation */
+#menu-apparence .btn-check-apparence.active {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
 }

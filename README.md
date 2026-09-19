@@ -193,13 +193,28 @@ copier les sauvegardes ailleurs (cloud, autre disque). Pour restaurer :
 mysql -u gestion_tissus -p gestion_tissus < sauvegarde-2026-01-01.sql
 ```
 
-## Utilisateurs et rôles
+## Utilisateurs, rôles et droits d'accès
 
 - **Administrateur** : accès à tout, y compris la gestion des utilisateurs
-  (menu « Utilisateurs »).
-- **Employé** : accès à toutes les fonctions métier (fournisseurs,
-  couturiers, clients, achats, commandes, ventes, stock), sauf la gestion des
-  utilisateurs.
+  (menu « Utilisateurs »), et ne peut pas être restreint.
+- **Employé** : accès limité aux modules qui lui sont explicitement accordés.
+  Depuis le menu « Utilisateurs » (réservé aux administrateurs), pour chaque
+  employé, vous cochez individuellement les modules auxquels il a droit parmi :
+  Fournisseurs, Couturiers, Clients, Achats, Commandes de couture, Ventes et
+  Consultation du stock. Un employé sans aucun module coché ne voit que le
+  tableau de bord. Les droits d'un employé peuvent être différents de ceux
+  d'un autre — il n'y a plus un seul niveau d'accès « employé » unique.
+- Migration automatique : si vous mettez à jour une installation existante,
+  tous les employés déjà créés conservent automatiquement l'accès à tous les
+  modules au premier redémarrage après la mise à jour (rien n'est coupé sans
+  action de votre part). Vous pouvez ensuite restreindre chacun individuellement
+  depuis « Utilisateurs » → « Modifier ».
+- Si un employé est déjà connecté au moment où vous modifiez ses droits, le
+  changement ne prend effet qu'à sa prochaine connexion (il doit se
+  déconnecter puis se reconnecter).
+- Depuis la page « Modifier » d'un utilisateur, vous pouvez aussi réinitialiser
+  son mot de passe (champ « Nouveau mot de passe », à laisser vide pour ne pas
+  le changer).
 
 Plusieurs employés peuvent utiliser l'application simultanément : MySQL gère
 nativement les accès concurrents, y compris pour une équipe plus importante

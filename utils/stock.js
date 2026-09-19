@@ -31,7 +31,12 @@ async function getStockNonCousu(pool) {
   return lignes;
 }
 
-// Stock des tissus COUSUS = quantités reçues des couturiers (statut = 'recu') - quantités vendues
+// Stock des tissus COUSUS = quantités effectivement reçues des couturiers
+// (quantite_recue, qui peut n'être qu'une partie d'une commande en cas de
+// réception partielle) - quantités vendues. Une commande annulée ne compte
+// jamais, même si une réception partielle avait déjà eu lieu avant son
+// annulation (en pratique l'application empêche d'annuler une commande déjà
+// partiellement reçue, mais on l'exclut ici par sécurité).
 async function getStockCousu(pool) {
   const [lignes] = await pool.query(`
     SELECT
@@ -41,14 +46,14 @@ async function getStockCousu(pool) {
       COALESCE(vendu.total, 0) AS total_vendu,
       ROUND(COALESCE(recu.total, 0) - COALESCE(vendu.total, 0), 3) AS stock_disponible
     FROM (
-      SELECT qualite, modele FROM commandes_couture WHERE statut = 'recu'
+      SELECT qualite, modele FROM commandes_couture WHERE quantite_recue > 0 AND statut != 'annule'
       UNION
       SELECT qualite, modele FROM ventes
     ) AS combinaisons
     LEFT JOIN (
-      SELECT qualite, modele, SUM(quantite) AS total
+      SELECT qualite, modele, SUM(quantite_recue) AS total
       FROM commandes_couture
-      WHERE statut = 'recu'
+      WHERE quantite_recue > 0 AND statut != 'annule'
       GROUP BY qualite, modele
     ) AS recu ON recu.qualite = combinaisons.qualite AND recu.modele = combinaisons.modele
     LEFT JOIN (

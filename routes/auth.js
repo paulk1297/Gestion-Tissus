@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const pool = require('../db/connection');
 const asyncHandler = require('../utils/asyncHandler');
+const { CLES_MODULES, parsePermissions } = require('../utils/modules');
 
 const router = express.Router();
 
@@ -28,6 +29,9 @@ router.post(
       nom: utilisateur.nom,
       email: utilisateur.email,
       role: utilisateur.role,
+      // Un administrateur a toujours accès à tout ; un employé est limité
+      // aux modules listés dans sa colonne "permissions".
+      permissions: utilisateur.role === 'admin' ? CLES_MODULES : parsePermissions(utilisateur.permissions),
     };
     res.redirect('/');
   })

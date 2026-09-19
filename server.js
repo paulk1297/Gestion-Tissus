@@ -4,7 +4,7 @@ const express = require('express');
 const session = require('express-session');
 
 const initDb = require('./db/init');
-const { requireAuth, requireAdmin, exposeLocals } = require('./middleware/auth');
+const { requireAuth, requireAdmin, requirePermission, exposeLocals } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,15 +32,18 @@ app.use(exposeLocals);
 // Routes publiques (connexion)
 app.use('/', require('./routes/auth'));
 
-// Tout le reste nécessite d'être connecté
+// Tout le reste nécessite d'être connecté. Le tableau de bord reste visible
+// par tous les utilisateurs connectés (vue d'ensemble en lecture seule) ;
+// chaque autre section nécessite la permission du module correspondant
+// (un administrateur passe toujours ces vérifications).
 app.use('/', requireAuth, require('./routes/dashboard'));
-app.use('/fournisseurs', requireAuth, require('./routes/fournisseurs'));
-app.use('/couturiers', requireAuth, require('./routes/couturiers'));
-app.use('/clients', requireAuth, require('./routes/clients'));
-app.use('/achats', requireAuth, require('./routes/achats'));
-app.use('/commandes', requireAuth, require('./routes/commandes'));
-app.use('/ventes', requireAuth, require('./routes/ventes'));
-app.use('/stock', requireAuth, require('./routes/stock'));
+app.use('/fournisseurs', requireAuth, requirePermission('fournisseurs'), require('./routes/fournisseurs'));
+app.use('/couturiers', requireAuth, requirePermission('couturiers'), require('./routes/couturiers'));
+app.use('/clients', requireAuth, requirePermission('clients'), require('./routes/clients'));
+app.use('/achats', requireAuth, requirePermission('achats'), require('./routes/achats'));
+app.use('/commandes', requireAuth, requirePermission('commandes'), require('./routes/commandes'));
+app.use('/ventes', requireAuth, requirePermission('ventes'), require('./routes/ventes'));
+app.use('/stock', requireAuth, requirePermission('stock'), require('./routes/stock'));
 app.use('/utilisateurs', requireAuth, requireAdmin, require('./routes/users'));
 
 // 404

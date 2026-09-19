@@ -3,5 +3,41 @@
     Plateforme de gestion d'achat, de couture, de vente et de stock de tissus
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Bascule entre les 2 styles de couleur et les modes clair/sombre
+    // (le choix initial est déjà appliqué par le script anti-flash dans
+    // <head> ; ce script gère seulement les clics et la mémorisation).
+    (function () {
+      function appliquer(style, mode) {
+        document.documentElement.setAttribute('data-style', style);
+        document.documentElement.setAttribute('data-bs-theme', mode);
+        try {
+          localStorage.setItem('tissus_theme_style', style);
+          localStorage.setItem('tissus_theme_mode', mode);
+        } catch (e) {}
+        document.querySelectorAll('[data-theme-style]').forEach(function (bouton) {
+          bouton.classList.toggle('active', bouton.getAttribute('data-theme-style') === style);
+        });
+        document.querySelectorAll('[data-theme-mode]').forEach(function (bouton) {
+          bouton.classList.toggle('active', bouton.getAttribute('data-theme-mode') === mode);
+        });
+      }
+
+      var styleActuel = document.documentElement.getAttribute('data-style') || '1';
+      var modeActuel = document.documentElement.getAttribute('data-bs-theme') || 'light';
+      appliquer(styleActuel, modeActuel);
+
+      document.querySelectorAll('[data-theme-style]').forEach(function (bouton) {
+        bouton.addEventListener('click', function () {
+          appliquer(bouton.getAttribute('data-theme-style'), document.documentElement.getAttribute('data-bs-theme') || 'light');
+        });
+      });
+      document.querySelectorAll('[data-theme-mode]').forEach(function (bouton) {
+        bouton.addEventListener('click', function () {
+          appliquer(document.documentElement.getAttribute('data-style') || '1', bouton.getAttribute('data-theme-mode'));
+        });
+      });
+    })();
+  </script>
 </body>
 </html>

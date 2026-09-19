@@ -2,7 +2,7 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h3 class="mb-0">Utilisateurs</h3>
-  <a href="/utilisateurs/nouveau" class="btn btn-dark">+ Ajouter un utilisateur</a>
+  <a href="/utilisateurs/nouveau" class="btn btn-brand">+ Ajouter un utilisateur</a>
 </div>
 
 <div class="card">
@@ -13,6 +13,7 @@
           <th>Nom</th>
           <th>Email</th>
           <th>Rôle</th>
+          <th>Modules autorisés</th>
           <th>Statut</th>
           <th class="text-end">Actions</th>
         </tr>
@@ -23,8 +24,21 @@
           <td><%= u.nom %></td>
           <td><%= u.email %></td>
           <td><%= u.role === 'admin' ? 'Administrateur' : 'Employé' %></td>
+          <td>
+            <% if (u.role === 'admin') { %>
+              <span class="text-muted">Tous (administrateur)</span>
+            <% } else if (u.permissionsListe.length === 0) { %>
+              <span class="text-muted">Aucun</span>
+            <% } else { %>
+              <% u.permissionsListe.forEach(cle => { %>
+                <% const mod = MODULES.find(m => m.cle === cle); %>
+                <span class="badge bg-light text-dark border me-1 mb-1"><%= mod ? mod.libelle : cle %></span>
+              <% }) %>
+            <% } %>
+          </td>
           <td><span class="badge <%= u.actif ? 'bg-success' : 'bg-secondary' %>"><%= u.actif ? 'Actif' : 'Désactivé' %></span></td>
-          <td class="text-end">
+          <td class="text-end text-nowrap">
+            <a href="/utilisateurs/<%= u.id %>/modifier" class="btn btn-sm btn-outline-secondary">Modifier</a>
             <% if (u.actif) { %>
               <form action="/utilisateurs/<%= u.id %>/desactiver" method="POST" class="d-inline">
                 <button type="submit" class="btn btn-sm btn-outline-danger">Désactiver</button>

@@ -1,38 +1,88 @@
-<%- include('../partials/header', { titrePage: 'Nouvel utilisateur' }) %>
+<%- include('../partials/header', { titrePage: (item ? 'Modifier' : 'Nouvel') + ' utilisateur' }) %>
 
-<h3 class="mb-4">Ajouter un utilisateur</h3>
+<h3 class="mb-4"><%= item ? 'Modifier l\'utilisateur' : 'Ajouter un utilisateur' %></h3>
 
 <div class="row justify-content-center">
-  <div class="col-md-6">
+  <div class="col-md-7">
     <div class="card">
       <div class="card-body p-4">
         <% if (erreur) { %><div class="alert alert-danger py-2"><%= erreur %></div><% } %>
-        <form action="/utilisateurs" method="POST">
-          <div class="mb-3">
-            <label class="form-label">Nom *</label>
-            <input type="text" name="nom" class="form-control" required autofocus>
+        <form action="<%= item ? '/utilisateurs/' + item.id : '/utilisateurs' %>" method="POST">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Nom *</label>
+              <input type="text" name="nom" class="form-control" value="<%= item ? item.nom : '' %>" required autofocus>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Email *</label>
+              <input type="email" name="email" class="form-control" value="<%= item ? item.email : '' %>" required>
+            </div>
           </div>
-          <div class="mb-3">
-            <label class="form-label">Email *</label>
-            <input type="email" name="email" class="form-control" required>
-          </div>
+
+          <% if (!item) { %>
           <div class="mb-3">
             <label class="form-label">Mot de passe *</label>
             <input type="password" name="mot_de_passe" class="form-control" minlength="6" required>
           </div>
+          <% } else { %>
+          <div class="mb-3">
+            <label class="form-label">Nouveau mot de passe</label>
+            <input type="password" name="nouveau_mot_de_passe" class="form-control" minlength="6" placeholder="Laisser vide pour ne pas changer">
+            <div class="form-text">Renseignez ce champ uniquement pour réinitialiser le mot de passe de cet utilisateur.</div>
+          </div>
+          <% } %>
+
           <div class="mb-3">
             <label class="form-label">Rôle</label>
-            <select name="role" class="form-select">
-              <option value="employe">Employé</option>
-              <option value="admin">Administrateur</option>
+            <select name="role" id="champ-role" class="form-select" <%= item && item.id === currentUser.id ? 'disabled' : '' %>>
+              <option value="employe" <%= item && item.role === 'employe' ? 'selected' : '' %>>Employé</option>
+              <option value="admin" <%= item && item.role === 'admin' ? 'selected' : '' %>>Administrateur</option>
             </select>
+            <% if (item && item.id === currentUser.id) { %>
+              <input type="hidden" name="role" value="<%= item.role %>">
+              <div class="form-text">Vous ne pouvez pas changer votre propre rôle.</div>
+            <% } %>
           </div>
-          <button type="submit" class="btn btn-dark">Créer l'utilisateur</button>
+
+          <div class="mb-3" id="bloc-permissions">
+            <label class="form-label d-block">Modules accessibles <span class="text-muted">(ignoré si le rôle est Administrateur, qui a accès à tout)</span></label>
+            <div class="row">
+              <% MODULES.forEach(m => { %>
+                <div class="col-md-6">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="permissions" value="<%= m.cle %>" id="perm-<%= m.cle %>"
+                      <%= permissionsActuelles.includes(m.cle) ? 'checked' : '' %>>
+                    <label class="form-check-label" for="perm-<%= m.cle %>"><%= m.libelle %></label>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+            <% if (item) { %>
+              <div class="form-text">Si cet utilisateur est déjà connecté, les changements de droits ne prendront effet qu'à sa prochaine connexion.</div>
+            <% } %>
+          </div>
+
+          <button type="submit" class="btn btn-brand">Enregistrer</button>
           <a href="/utilisateurs" class="btn btn-link">Annuler</a>
         </form>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+  // Grise visuellement le bloc des permissions quand le rôle "Administrateur"
+  // est sélectionné, puisqu'il est alors ignoré (un admin a accès à tout).
+  (function () {
+    var champRole = document.getElementById('champ-role');
+    var blocPermissions = document.getElementById('bloc-permissions');
+    if (!champRole) return;
+    function majApparence() {
+      blocPermissions.style.opacity = champRole.value === 'admin' ? '0.5' : '1';
+    }
+    champRole.addEventListener('change', majApparence);
+    majApparence();
+  })();
+</script>
 
 <%- include('../partials/footer') %>

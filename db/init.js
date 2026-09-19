@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
+const { toutesLesPermissions } = require('../utils/modules');
 
 async function creerBaseSiBesoin() {
   const nomBase = process.env.DB_NAME || 'gestion_tissus';
@@ -37,6 +38,44 @@ function decouperInstructionsSql(sql) {
     .filter((instruction) => instruction.length > 0);
 }
 
+// Migration : ajoute la colonne "permissions" si elle n'existe pas encore
+// (base créée avant l'ajout de la gestion des droits par employé), et
+// accorde l'accès à tous les modules aux employés déjà existants pour ne
+// pas leur couper l'accès du jour au lendemain — l'administrateur pourra
+// ensuite restreindre chacun individuellement depuis "Utilisateurs".
+async function migrerColonnePermissions(pool) {
+  const [colonnes] = await pool.query(
+    `SELECT COUNT(*) AS n FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'utilisateurs' AND COLUMN_NAME = 'permissions'`
+  );
+  if (colonnes[0].n === 0) {
+    console.log('Migration : ajout de la colonne "permissions" à la table utilisateurs...');
+    await pool.query('ALTER TABLE utilisateurs ADD COLUMN permissions VARCHAR(500) AFTER role');
+  }
+
+  await pool.query(
+    `UPDATE utilisateurs SET permissions = ? WHERE role = 'employe' AND (permissions IS NULL OR permissions = '')`,
+    [toutesLesPermissions()]
+  );
+}
+
+// Migration : ajoute la colonne "quantite_recue" si elle n'existe pas encore
+// (base créée avant la gestion des réceptions partielles), et pour les
+// commandes déjà marquées "reçue" avant cette mise à jour, considère
+// qu'elles ont été reçues en totalité (comportement identique à avant).
+async function migrerColonneQuantiteRecue(pool) {
+  const [colonnes] = await pool.query(
+    `SELECT COUNT(*) AS n FROM INFORMATION_SCHEMA.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'commandes_couture' AND COLUMN_NAME = 'quantite_recue'`
+  );
+  if (colonnes[0].n === 0) {
+    console.log('Migration : ajout de la colonne "quantite_recue" à la table commandes_couture...');
+    await pool.query('ALTER TABLE commandes_couture ADD COLUMN quantite_recue DECIMAL(12,3) NOT NULL DEFAULT 0 AFTER quantite');
+  }
+
+  await pool.query(`UPDATE commandes_couture SET quantite_recue = quantite WHERE statut = 'recu'`);
+}
+
 async function init() {
   try {
     await creerBaseSiBesoin();
@@ -57,6 +96,9 @@ async function init() {
   for (const instruction of instructions) {
     await pool.query(instruction);
   }
+
+  await migrerColonnePermissions(pool);
+  await migrerColonneQuantiteRecue(pool);
 
   const [lignes] = await pool.query('SELECT COUNT(*) AS n FROM utilisateurs');
   if (lignes[0].n === 0) {

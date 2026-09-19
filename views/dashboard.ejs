@@ -70,7 +70,7 @@
 <div class="row g-3 mb-4">
   <div class="col-md-6">
     <div class="card h-100">
-      <div class="card-header bg-white">Dernières ventes</div>
+      <div class="card-header">Dernières ventes</div>
       <ul class="list-group list-group-flush">
         <% if (dernieresVentes.length === 0) { %>
           <li class="list-group-item text-muted">Aucune vente pour le moment.</li>
@@ -86,15 +86,18 @@
   </div>
   <div class="col-md-6">
     <div class="card h-100">
-      <div class="card-header bg-white">Dernières commandes de couture</div>
+      <div class="card-header">Dernières commandes de couture</div>
       <ul class="list-group list-group-flush">
         <% if (dernieresCommandes.length === 0) { %>
           <li class="list-group-item text-muted">Aucune commande pour le moment.</li>
         <% } %>
-        <% dernieresCommandes.forEach(c => { %>
+        <% dernieresCommandes.forEach(c => {
+          const statutAffiche = (c.statut === 'envoye' && c.quantite_recue > 0) ? 'partiel' : c.statut;
+          const libellesStatut = { envoye: 'envoyée', recu: 'reçue', annule: 'annulée', partiel: 'partiellement reçue' };
+        %>
           <li class="list-group-item d-flex justify-content-between">
             <span><%= c.couturier_nom %> — <%= c.qualite %> / <%= c.modele %> (<%= c.quantite %>)</span>
-            <span class="badge badge-statut-<%= c.statut %>"><%= c.statut %></span>
+            <span class="badge badge-statut-<%= statutAffiche %>"><%= libellesStatut[statutAffiche] || statutAffiche %></span>
           </li>
         <% }) %>
       </ul>
@@ -104,7 +107,7 @@
 
 <% if (stockNonCousuFaible.length > 0 || stockCousuFaible.length > 0) { %>
 <div class="card mb-4">
-  <div class="card-header bg-white">⚠️ Alertes de stock (épuisé ou négatif)</div>
+  <div class="card-header">⚠️ Alertes de stock (épuisé ou négatif)</div>
   <div class="card-body">
     <% if (stockNonCousuFaible.length > 0) { %>
       <p class="mb-1"><strong>Tissus non cousus :</strong>

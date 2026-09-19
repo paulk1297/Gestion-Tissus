@@ -7,6 +7,10 @@ CREATE TABLE IF NOT EXISTS utilisateurs (
   email           VARCHAR(255) NOT NULL UNIQUE,
   mot_de_passe    VARCHAR(255) NOT NULL,
   role            ENUM('admin', 'employe') NOT NULL DEFAULT 'employe',
+  -- Liste des modules autorisés pour un employé, séparés par des virgules
+  -- (ex: "fournisseurs,achats,ventes"). Ignoré pour les administrateurs,
+  -- qui ont toujours accès à tout. NULL/vide = aucun accès pour un employé.
+  permissions     VARCHAR(500),
   actif           TINYINT(1) NOT NULL DEFAULT 1,
   cree_le         DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -70,6 +74,11 @@ CREATE TABLE IF NOT EXISTS commandes_couture (
   modele                VARCHAR(255) NOT NULL,
   prix_unitaire_couture DECIMAL(12,2) NOT NULL,
   quantite              DECIMAL(12,3) NOT NULL,
+  -- Quantité cumulée déjà réceptionnée chez le couturier (peut être
+  -- inférieure à "quantite" en cas de réception partielle échelonnée dans
+  -- le temps). Passe automatiquement à "quantite" quand la commande est
+  -- entièrement reçue (le statut passe alors à 'recu').
+  quantite_recue        DECIMAL(12,3) NOT NULL DEFAULT 0,
   montant_total         DECIMAL(14,2) NOT NULL,
   montant_paye          DECIMAL(14,2) NOT NULL DEFAULT 0,
   statut                ENUM('envoye', 'recu', 'annule') NOT NULL DEFAULT 'envoye',

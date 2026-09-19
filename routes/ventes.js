@@ -33,12 +33,13 @@ router.get(
 router.post(
   '/',
   asyncHandler(async (req, res) => {
-    const erreur = validerVente(req.body);
+    const stockDisponible = await getStockCousu(pool);
+    const erreur = validerVente(req.body, stockDisponible, null);
     if (erreur) {
       return res.render('ventes/form', {
         item: req.body,
         clients: await chargerClients(),
-        stockDisponible: await getStockCousu(pool),
+        stockDisponible,
         erreur,
       });
     }
@@ -80,12 +81,15 @@ router.get(
 router.post(
   '/:id',
   asyncHandler(async (req, res) => {
-    const erreur = validerVente(req.body);
+    const [lignesActuelles] = await pool.query('SELECT * FROM ventes WHERE id = ?', [req.params.id]);
+    const venteActuelle = lignesActuelles[0];
+    const stockDisponible = await getStockCousu(pool);
+    const erreur = validerVente(req.body, stockDisponible, venteActuelle);
     if (erreur) {
       return res.render('ventes/form', {
         item: { ...req.body, id: req.params.id },
         clients: await chargerClients(),
-        stockDisponible: await getStockCousu(pool),
+        stockDisponible,
         erreur,
       });
     }
@@ -122,7 +126,19 @@ router.post(
   })
 );
 
-function validerVente(body) {
+// Cherche le stock cousu disponible pour une combinaison qualité/modèle
+// donnée dans le tableau renvoyé par getStockCousu().
+function stockDisponiblePour(stockDisponible, qualite, modele) {
+  const ligne = stockDisponible.find((s) => s.qualite === qualite && s.modele === modele);
+  return ligne ? parseFloat(ligne.stock_disponible) : 0;
+}
+
+// Valide les champs de la vente et vérifie que la quantité demandée ne
+// dépasse pas le stock cousu réellement disponible pour cet article.
+// `venteActuelle` (uniquement en modification) permet de réintégrer la
+// quantité de la vente en cours de modification, puisqu'elle est déjà
+// déduite du stock calculé par getStockCousu().
+function validerVente(body, stockDisponible, venteActuelle) {
   const { client_id, qualite, modele, prix_unitaire_vente, quantite } = body;
   if (!client_id) return 'Veuillez choisir un client.';
   if (!qualite || !qualite.trim()) return 'La qualité est obligatoire.';
@@ -131,6 +147,21 @@ function validerVente(body) {
     return 'Le prix unitaire de vente doit être un nombre positif.';
   if (!quantite || isNaN(quantite) || parseFloat(quantite) <= 0)
     return 'La quantité doit être un nombre positif.';
+
+  const qualiteNettoyee = qualite.trim();
+  const modeleNettoye = modele.trim();
+  let disponible = stockDisponiblePour(stockDisponible, qualiteNettoyee, modeleNettoye);
+  if (
+    venteActuelle &&
+    venteActuelle.qualite === qualiteNettoyee &&
+    venteActuelle.modele === modeleNettoye
+  ) {
+    disponible += parseFloat(venteActuelle.quantite);
+  }
+  if (parseFloat(quantite) > disponible) {
+    return `Stock insuffisant : il ne reste que ${disponible} unité(s) disponible(s) pour "${qualiteNettoyee} / ${modeleNettoye}".`;
+  }
+
   return null;
 }
 
