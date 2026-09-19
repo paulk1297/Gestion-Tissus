@@ -1,0 +1,123 @@
+<%- include('partials/header', { titrePage: 'Tableau de bord' }) %>
+
+<h3 class="mb-4">Tableau de bord</h3>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="text-muted small">Stock tissus non cousus</div>
+        <div class="stat-value"><%= totalStockNonCousu.toFixed(2) %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="text-muted small">Stock tissus cousus</div>
+        <div class="stat-value"><%= totalStockCousu.toFixed(2) %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="text-muted small">Commandes en cours chez couturiers</div>
+        <div class="stat-value"><%= commandesEnCours %></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card">
+      <div class="card-body">
+        <div class="text-muted small">Ventes du mois</div>
+        <div class="stat-value"><%= chiffreAffairesMois.toLocaleString('fr-FR') %></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <div class="text-muted small">Solde dû aux fournisseurs</div>
+        <div class="fs-4 fw-bold <%= totalDuFournisseurs > 0 ? 'solde-positif' : '' %>"><%= totalDuFournisseurs.toLocaleString('fr-FR') %></div>
+        <a href="/achats" class="small">Voir les achats →</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <div class="text-muted small">Solde dû aux couturiers</div>
+        <div class="fs-4 fw-bold <%= totalDuCouturiers > 0 ? 'solde-positif' : '' %>"><%= totalDuCouturiers.toLocaleString('fr-FR') %></div>
+        <a href="/commandes" class="small">Voir les commandes →</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <div class="text-muted small">Solde dû par les clients</div>
+        <div class="fs-4 fw-bold <%= totalDuClients > 0 ? 'solde-positif' : '' %>"><%= totalDuClients.toLocaleString('fr-FR') %></div>
+        <a href="/ventes" class="small">Voir les ventes →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header bg-white">Dernières ventes</div>
+      <ul class="list-group list-group-flush">
+        <% if (dernieresVentes.length === 0) { %>
+          <li class="list-group-item text-muted">Aucune vente pour le moment.</li>
+        <% } %>
+        <% dernieresVentes.forEach(v => { %>
+          <li class="list-group-item d-flex justify-content-between">
+            <span><%= v.client_nom %> — <%= v.qualite %> / <%= v.modele %> (<%= v.quantite %>)</span>
+            <span class="text-muted"><%= v.date_vente %></span>
+          </li>
+        <% }) %>
+      </ul>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card h-100">
+      <div class="card-header bg-white">Dernières commandes de couture</div>
+      <ul class="list-group list-group-flush">
+        <% if (dernieresCommandes.length === 0) { %>
+          <li class="list-group-item text-muted">Aucune commande pour le moment.</li>
+        <% } %>
+        <% dernieresCommandes.forEach(c => { %>
+          <li class="list-group-item d-flex justify-content-between">
+            <span><%= c.couturier_nom %> — <%= c.qualite %> / <%= c.modele %> (<%= c.quantite %>)</span>
+            <span class="badge badge-statut-<%= c.statut %>"><%= c.statut %></span>
+          </li>
+        <% }) %>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<% if (stockNonCousuFaible.length > 0 || stockCousuFaible.length > 0) { %>
+<div class="card mb-4">
+  <div class="card-header bg-white">⚠️ Alertes de stock (épuisé ou négatif)</div>
+  <div class="card-body">
+    <% if (stockNonCousuFaible.length > 0) { %>
+      <p class="mb-1"><strong>Tissus non cousus :</strong>
+        <% stockNonCousuFaible.forEach((r, i) => { %><%= r.qualite %> / <%= r.nom_tissu %> (<%= r.stock_disponible %>)<%= i < stockNonCousuFaible.length - 1 ? ', ' : '' %><% }) %>
+      </p>
+    <% } %>
+    <% if (stockCousuFaible.length > 0) { %>
+      <p class="mb-0"><strong>Tissus cousus :</strong>
+        <% stockCousuFaible.forEach((r, i) => { %><%= r.qualite %> / <%= r.modele %> (<%= r.stock_disponible %>)<%= i < stockCousuFaible.length - 1 ? ', ' : '' %><% }) %>
+      </p>
+    <% } %>
+  </div>
+</div>
+<% } %>
+
+<%- include('partials/footer') %>

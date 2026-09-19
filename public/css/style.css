@@ -1,0 +1,54 @@
+body {
+  background-color: #f6f5f3;
+}
+
+.navbar-brand {
+  font-weight: 600;
+}
+
+.card {
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.stat-card .stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.table thead th {
+  white-space: nowrap;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  color: #6c757d;
+}
+
+.badge-statut-envoye {
+  background-color: #fff3cd;
+  color: #664d03;
+}
+
+.badge-statut-recu {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+.badge-statut-annule {
+  background-color: #f8d7da;
+  color: #842029;
+}
+
+.solde-positif {
+  color: #b02a37;
+  font-weight: 600;
+}
+
+.stock-faible {
+  color: #b02a37;
+  font-weight: 600;
+}
+
+footer {
+  color: #6c757d;
+  font-size: 0.85rem;
+}
